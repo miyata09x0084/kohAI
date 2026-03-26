@@ -1,34 +1,34 @@
-# Coworker — AI生産性アシスタント
+<p align="center">English | <a href="README.ja.md">日本語</a></p>
 
-Claude Codeの生産性を最大化するためのワークスペース。
-CLAUDE.mdの3層設計、サブエージェント活用、AI記憶システムを統合し、日常業務を効率化する。
+# Coworker — AI Productivity Assistant
 
-> 参考: [CLAUDE.mdを設計するとClaude Codeの生産性が別物になる](https://qiita.com/nogataka/items/1ad4e4ccaf47816c63e0)
+A workspace that maximizes Claude Code productivity.
+Integrates a 3-layer CLAUDE.md architecture, sub-agent orchestration, and an AI memory system to streamline daily workflows.
 
-## アーキテクチャ
+## Architecture
 
-### 3層CLAUDE.md設計
+### 3-Layer CLAUDE.md Design
 
 ```
-~/.claude/CLAUDE.md              # グローバル設定（仕事の進め方）
-coworker/CLAUDE.md               # プロジェクト設定（構成・トリガー）
-coworker/.claude/rules/*.md      # 行動規範ルール
+~/.claude/CLAUDE.md              # Global config (work style)
+coworker/CLAUDE.md               # Project config (structure & triggers)
+coworker/.claude/rules/*.md      # Behavioral rules
 ```
 
-| 層 | 役割 | 例 |
-|----|------|----|
-| グローバル | 全プロジェクト共通の人格・行動原則 | 結論ファースト、敬語、シンプル第一 |
-| プロジェクト | ディレクトリ構成・トリガー定義 | スキルトリガーテーブル |
-| ルール | 自動適用される行動規範 | 「焦ったら止まれ」 |
+| Layer | Role | Example |
+|-------|------|---------|
+| Global | Persona & principles across all projects | Conclusion-first, polite, simplicity-first |
+| Project | Directory structure & trigger definitions | Skill trigger table |
+| Rules | Auto-applied behavioral norms | "Stop when you feel rushed" |
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 coworker/
-├── CLAUDE.md                        # プロジェクト設定
+├── CLAUDE.md                        # Project config
 ├── .claude/
 │   ├── rules/
-│   │   └── behavioral-norms.md      # 行動規範
+│   │   └── behavioral-norms.md      # Behavioral norms
 │   └── commands/
 │       ├── daily-schedule.md        # /daily-schedule
 │       ├── deep-research.md         # /deep-research
@@ -36,89 +36,89 @@ coworker/
 │       └── agent-memory.md          # /agent-memory
 ├── 00_context/
 │   └── memories/
-│       ├── preferences.md           # ユーザーの好み・設定
-│       ├── decisions.md             # 意思決定ログ
-│       ├── context-log.md           # セッション間コンテキスト
-│       └── case-judgment-framework.md # 判断基準
-├── 01_strategy/                     # ビジネス戦略
+│       ├── preferences.md           # User preferences
+│       ├── decisions.md             # Decision log
+│       ├── context-log.md           # Cross-session context
+│       └── case-judgment-framework.md # Judgment criteria
+├── 01_strategy/                     # Business strategy
 └── output/
-    ├── research/                    # リサーチ出力
-    └── articles/                    # 記事出力
+    ├── research/                    # Research output
+    └── articles/                    # Article output
 ```
 
-## スラッシュコマンド
+## Slash Commands
 
-### `/daily-schedule` — 朝のルーティン
+### `/daily-schedule` — Morning Routine
 
-トリガー: 「おはよう」「今日の予定」
+Trigger: "Good morning", "Today's schedule"
 
-1. Google Calendarから本日の予定を取得
-2. メモリから未完了タスク・好みを読み込み
-3. タスクを**緊急度×重要度×認知負荷**で分類（アイゼンハワーマトリクス）
-4. 15分刻みのスケジュールを生成（午前=集中作業、午後=ミーティング）
-5. 承認後、Google Calendarに登録
+1. Fetch today's events from Google Calendar
+2. Load unfinished tasks & preferences from memory
+3. Classify tasks by **urgency x importance x cognitive load** (Eisenhower matrix)
+4. Generate a 15-min interval schedule (morning = deep work, afternoon = meetings)
+5. Register to Google Calendar after approval
 
-### `/deep-research` — 6エージェントリサーチ
+### `/deep-research` — 6-Agent Research
 
-トリガー: 「調べて」「リサーチして」
-
-```
-Phase 1（並列）  リサーチャーA（最新情報）
-                  リサーチャーB（技術背景）
-                  リサーチャーC（批判的分析）
-       ↓
-Phase 2          シンセサイザー（統合・構造化）
-       ↓
-Phase 3          レビュアー（品質チェック・差し戻し可）
-       ↓
-Phase 4          レポートライター（最終レポート作成）
-```
-
-出力先: `output/research/YYYY-MM-DD-{slug}.md`
-
-### `/write-article` — 5フェーズ記事作成
-
-トリガー: 「記事を書いて」「ブログ書いて」
+Trigger: "Research this", "Look into"
 
 ```
-Phase 1（並列）  調査A（最新情報）/ 調査B（競合分析）/ 調査C（読者ニーズ）
+Phase 1 (parallel)  Researcher A (latest info)
+                     Researcher B (technical background)
+                     Researcher C (critical analysis)
        ↓
-Phase 2          構成設計 → ユーザー承認
+Phase 2             Synthesizer (integrate & structure)
        ↓
-Phase 3          編集長レビュー（Go / 要修正）
+Phase 3             Reviewer (quality check, can reject)
        ↓
-Phase 4          執筆
-       ↓
-Phase 5          最終レビュー（誤字脱字・事実確認・SEO）
+Phase 4             Report Writer (final report)
 ```
 
-出力先: `output/articles/YYYY-MM-DD-{slug}.md`
+Output: `output/research/YYYY-MM-DD-{slug}.md`
 
-### `/agent-memory` — AI記憶管理
+### `/write-article` — 5-Phase Article Creation
 
-トリガー: 「覚えておいて」「メモして」
+Trigger: "Write an article", "Write a blog post"
 
-自動分類 → 重複チェック → 矛盾チェック → 保存の4ステップで記憶を管理。
+```
+Phase 1 (parallel)  Research A (latest info) / Research B (competitor analysis) / Research C (reader needs)
+       ↓
+Phase 2             Outline design → User approval
+       ↓
+Phase 3             Editor review (Go / Revise)
+       ↓
+Phase 4             Writing
+       ↓
+Phase 5             Final review (typos, fact-check, SEO)
+```
 
-| カテゴリ | 保存先 |
-|---------|--------|
-| 好み・設定 | `00_context/memories/preferences.md` |
-| 意思決定 | `00_context/memories/decisions.md` |
-| セッションコンテキスト | `00_context/memories/context-log.md` |
-| 判断基準 | `00_context/memories/case-judgment-framework.md` |
+Output: `output/articles/YYYY-MM-DD-{slug}.md`
 
-## 前提条件
+### `/agent-memory` — AI Memory Management
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) がインストール済み
-- Google Calendar MCP が接続済み
+Trigger: "Remember this", "Take a note"
 
-## 設計原則
+4-step process: auto-classify → dedup check → conflict check → save.
 
-| 原則 | 説明 |
-|------|------|
-| 階層分離 | グローバル・プロジェクト・ルールの3層化 |
-| 情報絞込 | CLAUDE.mdは意思決定情報のみ（機械的ルールはLinter等に委譲） |
-| 1対1原則 | 1エージェント = 1タスク（出力の散漫化を防ぐ） |
-| レビュー必須 | 差し戻し可能なゲートを設置 |
-| コンテキスト節約 | 調査はサブエージェントに委任 |
-| 記憶の構造化 | 自動分類・重複チェック・矛盾チェック |
+| Category | Storage |
+|----------|---------|
+| Preferences | `00_context/memories/preferences.md` |
+| Decisions | `00_context/memories/decisions.md` |
+| Session context | `00_context/memories/context-log.md` |
+| Judgment criteria | `00_context/memories/case-judgment-framework.md` |
+
+## Prerequisites
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
+- Google Calendar MCP connected
+
+## Design Principles
+
+| Principle | Description |
+|-----------|-------------|
+| Layer separation | 3 layers: global, project, rules |
+| Information focus | CLAUDE.md contains only decision-relevant info (mechanical rules go to linters) |
+| 1:1 principle | 1 agent = 1 task (prevents scattered output) |
+| Review gates | Rejectable gates at each phase |
+| Context economy | Delegate research to sub-agents |
+| Structured memory | Auto-classify, dedup, conflict detection |
