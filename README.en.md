@@ -84,6 +84,7 @@ Config:
 - Source declarations: `.claude/config/news-sources.yaml` (add a new source by adding one entry — no command changes needed)
 - URL values: `.env` (e.g., `HACKER_NEWS_TOP_STORIES_URL`)
 - 3 strategies: `list-then-detail`, `rss`, `json-list` (covers most REST / RSS / JSON APIs)
+- 2 transports: `webfetch` (default) / `curl` (bot-block bypass with configurable User-Agent)
 
 ### `/deep-research` — 6-Agent Research
 

@@ -84,6 +84,7 @@ Phase 4          Markdown出力
 - ニュースソース定義は `.claude/config/news-sources.yaml`（宣言的・新規追加はここに entry を足すだけ）
 - URL 値は `.env` で管理（`HACKER_NEWS_TOP_STORIES_URL` 他）
 - 戦略は 3 種類: `list-then-detail` / `rss` / `json-list`（REST・RSS・JSON API の大半を網羅）
+- トランスポートは 2 種類: `webfetch`（デフォルト）/ `curl`（bot ブロック回避用、User-Agent 指定可）
 
 ### `/deep-research` — 6エージェントリサーチ
 

@@ -5,6 +5,8 @@
 #
 # URL 値は .env を参照する。${VAR} 表記を使うこと。
 # fetch.strategy は "list-then-detail" / "rss" / "json-list" のいずれか。
+# fetch.tool は "webfetch" (デフォルト) または "curl" を指定する。
+# curl を使う場合は fetch.user_agent を必須で指定する (bot ブロック回避)。
 
 sources:
   - name: Hacker News
@@ -35,6 +37,9 @@ sources:
     limit: 10
     fetch:
       strategy: json-list
+      # Reddit は WebFetch をブロックするため curl + User-Agent 回避
+      tool: curl
+      user_agent: "Mozilla/5.0 (compatible; CoworkerBot/1.0)"
       url: ${REDDIT_TECH_URL}
       list_path: data.children
     extract:
