@@ -39,7 +39,7 @@ sources:
       strategy: json-list
       # Reddit は WebFetch をブロックするため curl + User-Agent 回避
       tool: curl
-      user_agent: "Mozilla/5.0 (compatible; CoworkerBot/1.0)"
+      user_agent: "Mozilla/5.0 (compatible; DailyCoworkerBot/1.0)"
       url: ${REDDIT_TECH_URL}
       list_path: data.children
     extract:

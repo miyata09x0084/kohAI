@@ -1,162 +1,147 @@
-<p align="center"><a href="README.en.md">English</a> | 日本語</p>
+# daily-coworker
 
-# kohAI — あなたの後輩AI
+## Overview
 
-**あなたが先輩、AIは後輩**というスタンスのClaude Codeワークスペース。
-名前 `kohAI` は「後輩」+ `AI` の語呂合わせ。設計思想: **人間が主体、AIは支える側**。
+A personal AI assistant workspace built on Claude Code. Schedule management, research, article writing, and memory management are integrated as skills you can launch with trigger words.
 
-CLAUDE.mdの3層設計、サブエージェント活用、AI記憶システムを統合し、日常業務を効率化する。
+For example, saying "good morning" pulls up today's schedule, "look it up" fires off a research team, and "write an article" kicks off the drafting flow.
 
-## アーキテクチャ
+## Architecture
 
-### 3層CLAUDE.md設計
-
-```
-~/.claude/CLAUDE.md              # グローバル設定（仕事の進め方）
-kohAI/CLAUDE.md                  # プロジェクト設定（構成・トリガー）
-kohAI/.claude/rules/*.md         # 行動規範ルール
-```
-
-| 層 | 役割 | 例 |
-|----|------|----|
-| グローバル | 全プロジェクト共通の人格・行動原則 | 結論ファースト、敬語、シンプル第一 |
-| プロジェクト | ディレクトリ構成・トリガー定義 | スキルトリガーテーブル |
-| ルール | 自動適用される行動規範 | 「焦ったら止まれ」 |
-
-## ディレクトリ構成
+Built on Claude Code, with a clear separation of three elements: **instructions, skills, and memory**.
 
 ```
-kohAI/
-├── CLAUDE.md                        # プロジェクト設定
-├── .env                             # ニュースソース等の外部URL設定
+           User input (trigger word)
+                   │
+                   ▼
+    ┌──────────────────────────────┐
+    │  Instructions                │  ── how to behave
+    │  (CLAUDE.md + rules/)        │
+    └──────────────┬───────────────┘
+                   │ matching
+                   ▼
+    ┌──────────────────────────────┐
+    │  Skills                      │  ── what to execute
+    │  (.claude/commands/)         │
+    └───┬──────────────────────┬───┘
+        │                      │
+        ▼                      ▼
+ ┌──────────────┐    ┌──────────────┐
+ │    Memory     │    │    Output     │
+ │ (memories/)  │    │  (output/)   │
+ │              │    │              │
+ │ Read/update  │    │ Save results │
+ └──────────────┘    └──────────────┘
+```
+
+### Directory Layout
+
+```
+daily-coworker/
+├── CLAUDE.md                          # Project instructions
 ├── .claude/
 │   ├── rules/
-│   │   └── behavioral-norms.md      # 行動規範
-│   ├── config/
-│   │   └── news-sources.yaml        # /tech-news のソース宣言的定義
-│   └── commands/
-│       ├── daily-schedule.md        # /daily-schedule
-│       ├── tech-news.md             # /tech-news
-│       ├── deep-research.md         # /deep-research
-│       ├── write-article.md         # /write-article
-│       └── agent-memory.md          # /agent-memory
-├── 00_context/
-│   └── memories/                    # AI記憶（個人の *.md は git管理外）
-│       ├── preferences.template.md  # 初回clone時に preferences.md へコピー
-│       ├── decisions.template.md
-│       ├── context-log.template.md
-│       └── case-judgment-framework.template.md
-├── 01_strategy/                     # ビジネス戦略
+│   │   └── behavioral-norms.md        # Behavioral rules (auto-applied)
+│   ├── commands/
+│   │   ├── daily-schedule.md          # /daily-schedule  — Morning schedule
+│   │   ├── tech-news.md               # /tech-news       — Tech news digest
+│   │   ├── deep-research.md           # /deep-research   — Multi-agent research
+│   │   ├── write-article.md           # /write-article   — Article writing
+│   │   └── agent-memory.md            # /agent-memory    — AI memory management
+│   └── config/
+│       └── news-sources.yaml          # /tech-news source definitions
+├── 00_context/memories/               # AI memory (*.md git-ignored; only templates tracked)
+│   ├── preferences.template.md
+│   ├── decisions.template.md
+│   ├── context-log.template.md
+│   └── case-judgment-framework.template.md
+├── 01_strategy/                       # Business strategy docs
 └── output/
-    ├── research/                    # リサーチ出力
-    ├── news/                        # テックニュース日次ダイジェスト
-    └── articles/                    # 記事出力
+    ├── news/                          # /tech-news daily digests
+    ├── research/                      # /deep-research reports
+    ├── articles/                      # /write-article outputs
+    ├── interview/                     # Interview preparation notes
+    └── x-posts/                       # X (Twitter) post drafts
 ```
 
-## スラッシュコマンド
+### Three-Layer Instruction Hierarchy
 
-### `/daily-schedule` — 朝のルーティン
+| Layer   | Location              | Role |
+|---------|-----------------------|------|
+| Global  | `~/.claude/CLAUDE.md` | Behavioral principles shared across all projects |
+| Project | `daily-coworker/CLAUDE.md` | Project-specific configuration and trigger definitions |
+| Rules   | `.claude/rules/`      | Context-activated behavior norms |
 
-トリガー: 「おはよう」「今日の予定」
+Separating the layers localizes the impact of any change.
 
-1. Google Calendarから本日の予定を取得
-2. メモリから未完了タスク・好みを読み込み
-3. タスクを**緊急度×重要度×認知負荷**で分類（アイゼンハワーマトリクス）
-4. 15分刻みのスケジュールを生成（午前=集中作業、午後=ミーティング）
-5. 承認後、Google Calendarに登録
+### Skill Invocation Flow
 
-### `/tech-news` — テックニュース斜め読み
+Trigger word (e.g., "look it up") → the project `CLAUDE.md` matches the corresponding skill → `.claude/commands/{skill}.md` runs. Complex skills parallelize via subagents to keep main-thread context consumption low.
 
-トリガー: 「テックニュース」「ニュース」
+### Memory Handling
 
-```
-Phase 1（並列）  Hacker News / TechCrunch RSS / Reddit r/technology
-       ↓
-Phase 2          重複除去 → 日本語要約 → スコア順ソート → 10〜20件に整形
-       ↓
-Phase 3          横断分析（技術トレンド + 業界構造で3インサイト、「何が起きているか → So what?」形式）
-       ↓
-Phase 4          Markdown出力
-```
+`00_context/memories/` accumulates preferences, decisions, and context logs as Markdown. These are automatically referenced at the start of each new session. Personal memory (`*.md`) is git-ignored; only templates (`*.template.md`) are tracked.
 
-出力先: `output/news/YYYY-MM-DD-tech-news.md`
-設定:
-- ニュースソース定義は `.claude/config/news-sources.yaml`（宣言的・新規追加はここに entry を足すだけ）
-- URL 値は `.env` で管理（`HACKER_NEWS_TOP_STORIES_URL` 他）
-- 戦略は 3 種類: `list-then-detail` / `rss` / `json-list`（REST・RSS・JSON API の大半を網羅）
-- トランスポートは 2 種類: `webfetch`（デフォルト）/ `curl`（bot ブロック回避用、User-Agent 指定可）
+## Steps
 
-### `/deep-research` — 6エージェントリサーチ
+### Prerequisites
 
-トリガー: 「調べて」「リサーチして」
+| Tool | Purpose |
+|------|---------|
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Runtime |
+| Google Calendar MCP | Calendar integration for `/daily-schedule` |
+| git | Cloning the repository |
 
-```
-Phase 1（並列）  リサーチャーA（最新情報）
-                  リサーチャーB（技術背景）
-                  リサーチャーC（批判的分析）
-       ↓
-Phase 2          シンセサイザー（統合・構造化）
-       ↓
-Phase 3          レビュアー（品質チェック・差し戻し可）
-       ↓
-Phase 4          レポートライター（最終レポート作成）
-```
+### 1. Install Claude Code
 
-出力先: `output/research/YYYY-MM-DD-{slug}.md`
+Follow the [official documentation](https://docs.anthropic.com/en/docs/claude-code).
 
-### `/write-article` — 5フェーズ記事作成
-
-トリガー: 「記事を書いて」「ブログ書いて」
-
-```
-Phase 1（並列）  調査A（最新情報）/ 調査B（競合分析）/ 調査C（読者ニーズ）
-       ↓
-Phase 2          構成設計 → ユーザー承認
-       ↓
-Phase 3          編集長レビュー（Go / 要修正）
-       ↓
-Phase 4          執筆
-       ↓
-Phase 5          最終レビュー（誤字脱字・事実確認・SEO）
-```
-
-出力先: `output/articles/YYYY-MM-DD-{slug}.md`
-
-### `/agent-memory` — AI記憶管理
-
-トリガー: 「覚えておいて」「メモして」
-
-自動分類 → 重複チェック → 矛盾チェック → 保存の4ステップで記憶を管理。
-
-| カテゴリ | 保存先 |
-|---------|--------|
-| 好み・設定 | `00_context/memories/preferences.md` |
-| 意思決定 | `00_context/memories/decisions.md` |
-| セッションコンテキスト | `00_context/memories/context-log.md` |
-| 判断基準 | `00_context/memories/case-judgment-framework.md` |
-
-## 前提条件
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) がインストール済み
-- Google Calendar MCP が接続済み
-
-## セットアップ
-
-初回 clone 時、テンプレから記憶ファイルを初期化してください:
+### 2. Clone the repository
 
 ```bash
-for f in 00_context/memories/*.template.md; do cp "$f" "${f%.template.md}.md"; done
+git clone https://github.com/miyata09x0084/daily-coworker.git
+cd daily-coworker
 ```
 
-個人の記憶（`*.md`）はローカル専用・git管理外です。テンプレ（`*.template.md`）のみが追跡対象。
+### 3. Connect Google Calendar MCP
 
-## 設計原則
+Required only for `/daily-schedule`. Connect Google Calendar through Claude Code's MCP settings.
 
-| 原則 | 説明 |
-|------|------|
-| 階層分離 | グローバル・プロジェクト・ルールの3層化 |
-| 情報絞込 | CLAUDE.mdは意思決定情報のみ（機械的ルールはLinter等に委譲） |
-| 1対1原則 | 1エージェント = 1タスク（出力の散漫化を防ぐ） |
-| レビュー必須 | 差し戻し可能なゲートを設置 |
-| コンテキスト節約 | 調査はサブエージェントに委任 |
-| 記憶の構造化 | 自動分類・重複チェック・矛盾チェック |
+### 4. Create `.env`
+
+Set news source URLs for `/tech-news`.
+
+```bash
+cat > .env <<'EOF'
+HACKER_NEWS_TOP_STORIES_URL=https://hacker-news.firebaseio.com/v0/topstories.json
+HACKER_NEWS_ITEM_URL_TEMPLATE=https://hacker-news.firebaseio.com/v0/item/{id}.json
+TECHCRUNCH_RSS_URL=https://techcrunch.com/feed/
+REDDIT_TECH_URL=https://www.reddit.com/r/technology/hot.json
+EOF
+```
+
+### 5. Initialize memory files
+
+Copy each memory file from its template.
+
+```bash
+for f in 00_context/memories/*.template.md; do
+  cp "$f" "${f%.template.md}.md"
+done
+```
+
+Personal memory (`*.md`) is git-ignored; only templates (`*.template.md`) are tracked.
+
+### Usage
+
+Say a trigger word in Claude Code to launch the corresponding skill. The triggers are defined in Japanese because the project targets Japanese-speaking users.
+
+| Trigger (Japanese) | Meaning | Skill |
+|--------------------|---------|-------|
+| 「おはよう」 / 「今日の予定」   | "good morning" / "today's schedule" | `/daily-schedule` |
+| 「テックニュース」 / 「ニュース」 | "tech news" / "news"                | `/tech-news` |
+| 「調べて」 / 「リサーチして」   | "look it up" / "research"           | `/deep-research` |
+| 「記事を書いて」 / 「ブログ書いて」 | "write an article" / "write a blog" | `/write-article` |
+| 「覚えておいて」 / 「メモして」  | "remember this" / "note this"       | `/agent-memory` |
+
+Slash commands (e.g., `/tech-news`) can also be invoked directly.
